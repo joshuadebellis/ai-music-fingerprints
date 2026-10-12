@@ -59,7 +59,7 @@
 <div class="eyebrow">AI music detection · Echoes benchmark</div>
 <h1>Spectral Fingerprints of AI Music Generators</h1>
 <p class="lede">A 2.5&nbsp;MB detector that halves the published error on the Echoes benchmark, runs 115× faster than real time on one CPU thread, and shows exactly what gives each generator away.</p>
-<div class="byline sans">Joshua DeBellis · October 2026</div>
+<div class="byline sans">Joshua DeBellis · October 2026 · <a href="https://github.com/joshuadebellis/ai-music-fingerprints">Code on GitHub</a></div>
 
 <div class="stats">
   <div class="stat"><div class="big">8.4%</div><div class="vs">vs 15.3% published</div><div class="label">Segment-level equal error rate, generators seen in training</div></div>
@@ -185,7 +185,7 @@
 </ul>
 
 <h2>Reproduce</h2>
-<p>Everything runs on a single workstation with Python and <code>uv</code>. The Echoes AI tracks come from Hugging Face. The 296 real tracks are matched to FMA by title and artist (296/296 exact) and pulled out of the 879&nbsp;GB <code>fma_full.zip</code> with HTTP range requests, about 2.4&nbsp;GB in total. Full commands are in the repository README.</p>
+<p>Everything runs on a single workstation with Python and <code>uv</code>. The Echoes AI tracks come from Hugging Face. The 296 real tracks are matched to FMA by title and artist (296/296 exact) and pulled out of the 879&nbsp;GB <code>fma_full.zip</code> with HTTP range requests, about 2.4&nbsp;GB in total. Full commands are in the <a href="https://github.com/joshuadebellis/ai-music-fingerprints#reproduce">repository README</a>.</p>
 
 <footer>
   <p>Data: <a href="https://arxiv.org/abs/2603.23667">Echoes</a> (Pascu, Oneata, Cucu, Müller, 2026; CC-BY-SA) and the <a href="https://github.com/mdeff/fma">Free Music Archive dataset</a> (Defferrard et al., ISMIR 2017). Audio remains under its original licenses and is not redistributed here.</p>
