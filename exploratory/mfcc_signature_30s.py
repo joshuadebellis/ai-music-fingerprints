@@ -1,6 +1,6 @@
-"""Summer pipeline reproduced on Echoes + FMA: first 30 s at 16 kHz (zero-padded if shorter, or dropped with 'nopad'),
+﻿"""MFCC path signature, one 30 s window per track reproduced on Echoes + FMA: first 30 s at 16 kHz (zero-padded if shorter, or dropped with 'nopad'),
 13 librosa MFCCs (default frames), path = time + raw MFCC, full signature depth 3. One sample per track.
-Usage: summer_pipeline.py <pad|nopad|pad_norm|nopad_norm>   ('_norm' = RMS-normalize the audio before MFCC)"""
+Usage: mfcc_signature_30s.py <pad|nopad|pad_norm|nopad_norm>   ('_norm' = RMS-normalize the audio before MFCC)"""
 import os
 
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -25,8 +25,8 @@ NORM = ARM.endswith("_norm")
 PAD_MODE = ARM.replace("_norm", "")
 DATA = Path("data")
 SRC = DATA / "segments.parquet"
-OUT_TABLE = DATA / f"summer_{ARM}.parquet"
-OUT_FEAT = DATA / f"feat_summer_{ARM}.npy"
+OUT_TABLE = DATA / f"mfcc30_{ARM}.parquet"
+OUT_FEAT = DATA / f"feat_mfcc30_{ARM}.npy"
 META = ["track_key", "path", "label", "generator", "gen_type", "genre", "reference"]
 
 
@@ -61,7 +61,7 @@ def main():
     workers = max(1, (os.cpu_count() or 2) - 1)
     with ProcessPoolExecutor(max_workers=workers) as ex:
         futures = [ex.submit(process, r) for r in tracks]
-        for fut in tqdm(as_completed(futures), total=len(futures), desc=f"summer pipeline ({ARM}, {workers} workers)", unit="track"):
+        for fut in tqdm(as_completed(futures), total=len(futures), desc=f"MFCC path signature, one 30 s window per track ({ARM}, {workers} workers)", unit="track"):
             rec, f, err = fut.result()
             if err:
                 errors.append(err)
