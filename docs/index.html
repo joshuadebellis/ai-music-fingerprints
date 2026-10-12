@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spectral Fingerprints of AI Music Generators</title>
+<meta name="description" content="A 2.5 MB spectral-fingerprint detector halves the published error for AI-generated music detection on the Echoes benchmark.">
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1d1d1b; --muted: #5d5b55; --rule: #dedbd2; --card: #ffffff;
+    --accent: #c4541b; --accent-soft: #f6e6dc; --good: #1f6f4a; --code: #f1efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #151514; --fg: #ecebe6; --muted: #a8a59c; --rule: #33322e; --card: #1d1c1a;
+            --accent: #f08a4b; --accent-soft: #3a2519; --good: #6cc49a; --code: #23221f; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 17px/1.6 Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 16px 80px; }
+  h1, h2, h3, .sans, table, .stat, nav, figcaption, .eyebrow {
+    font-family: -apple-system, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif; }
+  .eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: var(--accent); font-weight: 600; }
+  h1 { font-size: clamp(32px, 6vw, 46px); line-height: 1.1; margin: 8px 0 12px; letter-spacing: -.01em; }
+  .lede { font-size: 20px; color: var(--muted); margin: 0 0 28px; }
+  h2 { font-size: 24px; margin: 56px 0 12px; padding-top: 16px; border-top: 1px solid var(--rule); }
+  h3 { font-size: 17px; margin: 28px 0 6px; }
+  p, li { max-width: 68ch; }
+  a { color: var(--accent); }
+  .byline { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .stat { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; }
+  .stat .big { font-size: 30px; font-weight: 700; line-height: 1.1; }
+  .stat .vs { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .stat .label { font-size: 13px; margin-top: 8px; }
+  .table-wrap { overflow-x: auto; margin: 14px 0 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { padding: 7px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-weight: 600; color: var(--muted); border-bottom: 2px solid var(--rule); }
+  tr.hl td { background: var(--accent-soft); font-weight: 600; }
+  td.win { color: var(--good); font-weight: 600; }
+  .note { font-size: 14px; color: var(--muted); }
+  figure { margin: 22px 0; }
+  figure img { width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
+  figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .pipeline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 16px 0; font-size: 14px; }
+  .pipeline span { background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; }
+  .pipeline b { color: var(--muted); font-weight: 400; }
+  .callout { border-left: 3px solid var(--accent); background: var(--card); padding: 12px 16px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+  code { font-family: ui-monospace, Consolas, Menlo, monospace; font-size: 14px; background: var(--code); padding: 1px 5px; border-radius: 4px; }
+  footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<div class="eyebrow">AI music detection · Echoes benchmark</div>
+<h1>Spectral Fingerprints of AI Music Generators</h1>
+<p class="lede">A 2.5&nbsp;MB detector that halves the published error on the Echoes benchmark, runs 115× faster than real time on one CPU thread, and shows exactly what gives each generator away.</p>
+<div class="byline sans">Joshua DeBellis · October 2026</div>
+
+<div class="stats">
+  <div class="stat"><div class="big">8.4%</div><div class="vs">vs 15.3% published</div><div class="label">Segment-level equal error rate, generators seen in training</div></div>
+  <div class="stat"><div class="big">2.5&nbsp;MB</div><div class="vs">vs ~8&nbsp;GB (2B parameters)</div><div class="label">Model size: XGBoost on FFT features vs frozen Wav2Vec2 XLS-R 2B</div></div>
+  <div class="stat"><div class="big">87&nbsp;ms</div><div class="vs">per 10&nbsp;s of audio, 1 CPU thread</div><div class="label">End to end: decode, features, prediction</div></div>
+</div>
+<p class="note">All headline numbers are after re-encoding every real and AI track identically (see “The encoding confound”).</p>
+
+<h2>The question</h2>
+<p><a href="https://arxiv.org/abs/2603.23667">Echoes</a> (2026) is a deliberately hard benchmark for AI-generated music: 4,468 tracks from 12 generators (Suno v5, Udio, ElevenLabs, Stable Audio, MusicGen and others), each made to imitate one of 296 real songs from the Free Music Archive. Its baseline detector is a frozen 2-billion-parameter Wav2Vec2 XLS-R model with logistic regression on top, reaching 15.3% equal error rate (EER) in-domain and 22.3% on generators held out of training.</p>
+<p>Can traditional machine learning, meaning hand-built features and gradient-boosted trees, compete?</p>
+
+<h2>Method</h2>
+<div class="pipeline">
+  <span>MP3 → 32&nbsp;kHz mono</span><b>→</b>
+  <span>low-pass 15&nbsp;kHz</span><b>→</b>
+  <span>10&nbsp;s segments, loudness-normalized</span><b>→</b>
+  <span>features</span><b>→</b>
+  <span>XGBoost</span>
+</div>
+<ul>
+  <li><b>Fine spectrum:</b> long-term average log power per 7.8&nbsp;Hz bin, 0–15&nbsp;kHz (FFT size 4096).</li>
+  <li><b>Spectral residual:</b> that spectrum minus a smoothed copy, keeping only narrow peaks and dips. This is the strongest single feature set.</li>
+  <li><b>MFCC statistics</b> (20 coefficients plus deltas) and a <b>path signature</b> of eight band energies over time, both secondary.</li>
+</ul>
+<p>Protocol follows the paper: 10-second segments and segment-level EER, with one stricter change. Train and test are split by <i>reference song</i>, so a real song and all of its AI imitations always fall on the same side. Results are means over 5 random 80:20 splits.</p>
+
+<h2>Results</h2>
+<h3>In-domain (generators seen in training)</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Features</th><th>Segment EER</th><th>Track EER</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td>All combined (9,142 features)</td><td>0.084 ± 0.006</td><td>0.031</td></tr>
+    <tr><td>Spectral residual only (1,921)</td><td>0.099</td><td>0.043</td></tr>
+    <tr><td>Fine spectrum only (1,921)</td><td>0.171</td><td>0.098</td></tr>
+    <tr><td>MFCC 20 statistics (80)</td><td>0.276</td><td>0.177</td></tr>
+    <tr><td>Band-energy path signature (5,220)</td><td>0.348</td><td>0.225</td></tr>
+    <tr><td><i>Echoes paper: Wav2Vec2 XLS-R 2B + LR</i></td><td><i>0.153</i></td><td>—</td></tr>
+  </tbody>
+</table></div>
+<p>The spectral residual alone beats the published baseline. Averaging a track's segments brings EER to about 3%.</p>
+
+<h3>Per generator</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Generator</th><th>Seen: paper</th><th>Seen: ours</th><th>Unseen: paper</th><th>Unseen: ours</th></tr></thead>
+  <tbody>
+    <tr><td>AudioLDM</td><td>17.4%</td><td class="win">1.2%</td><td>27.5%</td><td class="win">11.4%</td></tr>
+    <tr><td>SongGen</td><td>12.7%</td><td class="win">2.4%</td><td>20.6%</td><td class="win">9.2%</td></tr>
+    <tr><td>Suno</td><td>13.5%</td><td class="win">4.2%</td><td>16.5%</td><td class="win">5.5%</td></tr>
+    <tr><td>DiffRhythm</td><td>9.0%</td><td class="win">4.2%</td><td>11.4%</td><td>32.1%</td></tr>
+    <tr><td>MusicGen</td><td>12.6%</td><td class="win">4.5%</td><td>22.8%</td><td>30.0%</td></tr>
+    <tr><td>AceStep</td><td>13.3%</td><td class="win">5.2%</td><td>19.4%</td><td>28.5%</td></tr>
+    <tr><td>Brev</td><td>13.9%</td><td class="win">5.2%</td><td>17.1%</td><td class="win">7.4%</td></tr>
+    <tr><td>Producer (Riffusion)</td><td>13.9%</td><td class="win">6.1%</td><td>18.6%</td><td>26.6%</td></tr>
+    <tr><td>ElevenLabs</td><td>16.7%</td><td class="win">6.5%</td><td>25.1%</td><td>27.7%</td></tr>
+    <tr><td>Udio</td><td>15.6%</td><td class="win">9.9%</td><td>24.9%</td><td>31.0%</td></tr>
+    <tr><td>Stable Audio</td><td>20.5%</td><td class="win">12.2%</td><td>31.1%</td><td class="win">25.7%</td></tr>
+    <tr><td>Mubert</td><td>21.7%</td><td>25.8%</td><td>33.2%</td><td>34.8%</td></tr>
+    <tr class="hl"><td>Mean</td><td>15.1%</td><td>7.3%</td><td>22.3%</td><td>22.5%</td></tr>
+  </tbody>
+</table></div>
+<p class="note">“Unseen” = leave one generator out of training, test on real music vs. that generator. Ours: all features, re-encoded at 128&nbsp;kbps; segment EER, mean of 5 splits.</p>
+<p><b>Seen generators: about half the error, 11 of 12 better.</b> <b>Unseen generators: parity on average,</b> with large wins on Suno, Brev, SongGen and AudioLDM and clear losses on DiffRhythm, MusicGen and AceStep. The features are sharp but generator-specific: they learn each architecture's fingerprint.</p>
+
+<h2>What gives them away</h2>
+<figure>
+  <img src="assets/generator_residual_spectra_reenc128.png" alt="Twelve panels, one per generator, showing the mean residual spectrum minus real music from 0 to 15 kHz.">
+  <figcaption>Each generator's mean residual spectrum minus real music's, after identical 128&nbsp;kbps re-encoding.</figcaption>
+</figure>
+<ul>
+  <li><b>MusicGen</b> leaves a comb: tall, evenly spaced spikes across the spectrum (regular at about 398&nbsp;Hz), the classic trace of an upsampling or codec decoder.</li>
+  <li><b>AudioLDM and SongGen</b> go flat above about 7–9&nbsp;kHz with a sharp edge near 8.8&nbsp;kHz, consistent with generating at a low internal sample rate.</li>
+  <li><b>ElevenLabs</b> has a distinctive bump near 6&nbsp;kHz.</li>
+  <li><b>Suno and Brev share the same ripple spacing (about 469&nbsp;Hz)</b> and cover for each other when either is held out, matching the Echoes paper's observation that the two are confused in attribution.</li>
+  <li><b>Mubert</b> is closest to real music and hardest to catch, consistent with assembling tracks from human-made loops rather than synthesizing audio.</li>
+</ul>
+<figure>
+  <img src="assets/residual_importance_reenc128.png" alt="Line chart of model importance by frequency from 0 to 15 kHz with sharp peaks between 5.5 and 13.5 kHz.">
+  <figcaption>Which frequency bins the residual-spectrum model relies on. Importance is spread across the spectrum, with the sharpest bins at 10–13&nbsp;kHz.</figcaption>
+</figure>
+
+<h2>The encoding confound</h2>
+<p>Echoes does not ship the real audio; it is rebuilt from the Free Music Archive. The two sides arrive encoded very differently:</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Source</th><th>Typical MP3 bitrate</th></tr></thead>
+  <tbody>
+    <tr><td>Real (FMA)</td><td>256–320 kbps (median ~306)</td></tr>
+    <tr><td>Most generators</td><td>128 kbps</td></tr>
+    <tr><td>ElevenLabs</td><td>192 kbps</td></tr>
+    <tr><td>MusicGen</td><td>~512 kbps (near-uncompressed)</td></tr>
+  </tbody>
+</table></div>
+<p>File bitrate <i>alone</i> separates real from AI with AUC 0.84. Any detector that sees high frequencies can partly learn “high bitrate = real.” So every track, real and AI, was re-encoded through the same MP3 encoder at the same settings, and the whole pipeline rerun:</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Audio</th><th>Segment EER</th><th>Track EER</th></tr></thead>
+  <tbody>
+    <tr><td>Original files</td><td>0.071</td><td>0.025</td></tr>
+    <tr class="hl"><td>All re-encoded, 128 kbps</td><td>0.084</td><td>0.031</td></tr>
+    <tr><td>All re-encoded, 96 kbps</td><td>0.093</td><td>0.041</td></tr>
+  </tbody>
+</table></div>
+<div class="callout">Encoding accounted for 1–2 points. The rest is the generators. Anyone benchmarking on Echoes with real audio rebuilt from FMA should equalize encoding first.</div>
+
+<h2>How simple is it?</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>This detector</th><th>Echoes baseline</th></tr></thead>
+  <tbody>
+    <tr><td>Model</td><td>XGBoost, 600 trees, 61,760 nodes</td><td>Wav2Vec2 XLS-R, ~2B parameters</td></tr>
+    <tr><td>Size</td><td>2.5 MB</td><td>~8 GB (float32)</td></tr>
+    <tr><td>Hardware</td><td>one CPU thread</td><td>GPU for practical speed</td></tr>
+    <tr><td>Time per 10 s segment</td><td>87 ms end to end (115× real time)</td><td>—</td></tr>
+    <tr><td>Interpretable</td><td>yes: individual frequency bins</td><td>no</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Limitations</h2>
+<ul>
+  <li><b>Unseen generators remain hard:</b> parity with the baseline, not a win. The features capture architecture-specific fingerprints.</li>
+  <li><b>Mubert</b> is barely detectable by either approach.</li>
+  <li><b>One dataset,</b> with 296 real songs; test splits contain about 60 real songs each, hence the 5-split averages.</li>
+  <li>Our split by reference song is slightly stricter than the paper's track-level split, so comparisons are, if anything, conservative.</li>
+  <li>Spectral fingerprints may fade as generators improve their decoders or deliberately suppress artifacts.</li>
+</ul>
+
+<h2>Reproduce</h2>
+<p>Everything runs on a single workstation with Python and <code>uv</code>. The Echoes AI tracks come from Hugging Face. The 296 real tracks are matched to FMA by title and artist (296/296 exact) and pulled out of the 879&nbsp;GB <code>fma_full.zip</code> with HTTP range requests, about 2.4&nbsp;GB in total. Full commands are in the repository README.</p>
+
+<footer>
+  <p>Data: <a href="https://arxiv.org/abs/2603.23667">Echoes</a> (Pascu, Oneata, Cucu, Müller, 2026; CC-BY-SA) and the <a href="https://github.com/mdeff/fma">Free Music Archive dataset</a> (Defferrard et al., ISMIR 2017). Audio remains under its original licenses and is not redistributed here.</p>
+  <p>Joshua DeBellis · physicist and data scientist</p>
+</footer>
+
+</main>
+</body>
+</html>

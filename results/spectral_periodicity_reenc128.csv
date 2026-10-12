@@ -1,0 +1,13 @@
+generator,peak_spacing_hz,autocorr_at_spacing,mean_abs_diff
+musicgen,398.4,0.535,0.1341
+elevenlabs,203.1,0.436,0.0262
+stableaudio,1117.2,0.268,0.0306
+udio,31.2,0.21,0.0383
+acestep,664.1,0.208,0.0657
+brev,468.8,0.17,0.0347
+suno,468.8,0.166,0.0355
+audioldm,195.3,0.162,0.0547
+producer,31.2,0.161,0.0395
+songgen,31.2,0.16,0.0369
+mubert,421.9,0.139,0.0239
+diffrhythm,1195.3,0.111,0.0564
