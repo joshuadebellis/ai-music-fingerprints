@@ -1,4 +1,4 @@
-﻿# Spectral Fingerprints of AI Music Generators
+# Spectral Fingerprints of AI Music Generators
 
 **A 2.5 MB detector that halves the published error on the Echoes benchmark.**
 
@@ -12,7 +12,7 @@ AI music generators leave narrow, generator-specific artifacts in the fine struc
 | Segment EER, unseen generators (mean) | 22.5% | 22.3% |
 | Model | XGBoost, 600 trees, 61,760 nodes | Wav2Vec2 XLS-R, ~2B parameters |
 | Size | **2.5 MB** | ~8 GB (float32) |
-| Time per 10 s segment, one CPU thread | **87 ms** end to end (115Ã— real time) | GPU for practical speed |
+| Time per 10 s segment, one CPU thread | **87 ms** end to end (115× real time) | GPU for practical speed |
 
 All numbers are after re-encoding every real and AI track identically (see [The encoding confound](#the-encoding-confound)).
 
@@ -21,14 +21,14 @@ All numbers are after re-encoding every real and AI track identically (see [The 
 ## Method
 
 ```
-MP3 â†’ 32 kHz mono â†’ low-pass 15 kHz â†’ 10 s segments, loudness-normalized â†’ features â†’ XGBoost
+MP3 → 32 kHz mono → low-pass 15 kHz → 10 s segments, loudness-normalized → features → XGBoost
 ```
 
 Features per 10-second segment (9,142 numbers):
 
 | Block | Size | Description |
 |---|---|---|
-| Fine spectrum (LTAS) | 1,921 | Long-term average log power per 7.8 Hz bin, 0â€“15 kHz (FFT size 4096) |
+| Fine spectrum (LTAS) | 1,921 | Long-term average log power per 7.8 Hz bin, 0–15 kHz (FFT size 4096) |
 | **Spectral residual** | 1,921 | Fine spectrum minus a median-smoothed copy: narrow peaks and dips only. **Strongest single block.** |
 | MFCC statistics | 80 | Mean and std of 20 MFCCs and their deltas |
 | Band-energy path signature | 5,220 | Depth-3 signature of time + lead-lag of 8 log-mel band energies over the segment |
@@ -41,12 +41,12 @@ Protocol follows the Echoes paper (10 s segments, segment-level EER), with one s
 
 | Features | Segment EER | Track EER |
 |---|---|---|
-| **All combined** | **0.084 Â± 0.006** | **0.031** |
+| **All combined** | **0.084 ± 0.006** | **0.031** |
 | Spectral residual only | 0.099 | 0.043 |
 | Fine spectrum only | 0.171 | 0.098 |
 | MFCC 20 statistics | 0.276 | 0.177 |
 | Band-energy path signature | 0.348 | 0.225 |
-| *Echoes paper: Wav2Vec2 XLS-R 2B + LR* | *0.153* | â€” |
+| *Echoes paper: Wav2Vec2 XLS-R 2B + LR* | *0.153* | — |
 
 ### Per generator
 
@@ -73,7 +73,7 @@ Protocol follows the Echoes paper (10 s segments, segment-level EER), with one s
 ![Mean residual spectrum per generator minus real music](docs/assets/generator_residual_spectra_reenc128.png)
 
 - **MusicGen:** an evenly spaced comb of spikes across the spectrum (regular at ~398 Hz), the classic trace of an upsampling or codec decoder.
-- **AudioLDM, SongGen:** flat above ~7â€“9 kHz with a sharp edge near 8.8 kHz, consistent with a low internal sample rate.
+- **AudioLDM, SongGen:** flat above ~7–9 kHz with a sharp edge near 8.8 kHz, consistent with a low internal sample rate.
 - **ElevenLabs:** a distinctive bump near 6 kHz.
 - **Suno and Brev:** the same ripple spacing (~469 Hz); each covers for the other when held out, matching the Echoes paper's attribution confusion between them.
 - **Mubert:** closest to real music and hardest to catch.
@@ -86,7 +86,7 @@ Echoes does not ship the real audio; it is rebuilt from the Free Music Archive. 
 
 | Source | Typical MP3 bitrate |
 |---|---|
-| Real (FMA) | 256â€“320 kbps (median ~306) |
+| Real (FMA) | 256–320 kbps (median ~306) |
 | Most generators | 128 kbps |
 | ElevenLabs | 192 kbps |
 | MusicGen | ~512 kbps (near-uncompressed) |
@@ -99,11 +99,11 @@ File bitrate **alone** separates real from AI with AUC 0.84. Every track was the
 | **All re-encoded, 128 kbps CBR** | **0.084** | **0.031** |
 | All re-encoded, 96 kbps CBR | 0.093 | 0.041 |
 
-Encoding accounted for 1â€“2 points; the rest is the generators. **Anyone benchmarking on Echoes with real audio rebuilt from FMA should equalize encoding first.**
+Encoding accounted for 1–2 points; the rest is the generators. **Anyone benchmarking on Echoes with real audio rebuilt from FMA should equalize encoding first.**
 
 ## What didn't work
 
-- **MFCC path signatures** (13 MFCCs, 10â€“30 s windows, depth 2â€“4, RF/XGBoost/logistic regression): best ~0.33 segment EER. Signatures beat MFCC averages by about 6 points under a linear model, but 13 MFCCs blur the fine spectral detail that matters.
+- **MFCC path signatures** (13 MFCCs, 10–30 s windows, depth 2–4, RF/XGBoost/logistic regression): best ~0.33 segment EER. Signatures beat MFCC averages by about 6 points under a linear model, but 13 MFCCs blur the fine spectral detail that matters.
 - **Chroma path signatures:** ~0.43. Frame-level pitch paths carried little signal on these generators.
 - **Longer windows** (20 s, 30 s): ~1 point of improvement.
 - **Zero-padding short clips to a fixed length is a shortcut.** With padding, the generators whose clips are shorter than the window become trivially detectable (MusicGen and SongGen drop to ~9% EER) because the model sees where the silence starts. All reported results use full-length windows only.
@@ -122,10 +122,10 @@ uv sync
 
 | Step | Script | What it does | Time |
 |---|---|---|---|
-| 1 | `download_echoes.py` | Download and extract Echoes (8.6 GB zip, 4,468 AI tracks) | 15â€“45 min |
+| 1 | `download_echoes.py` | Download and extract Echoes (8.6 GB zip, 4,468 AI tracks) | 15–45 min |
 | 2 | `match_fma.py` | Match the 296 real reference songs to FMA track IDs via `tracks.csv` (296/296 exact) | 1 min |
 | 3 | `fetch_fma_tracks.py` | Pull only those tracks out of the 879 GB `fma_full.zip` with HTTP range requests (~2.4 GB) | 5 min |
-| 4 | `prep_audio.py` | Cut 10 s segments (first 18 per track) â†’ `data/segments.parquet` (46,185 segments) | 8 min |
+| 4 | `prep_audio.py` | Cut 10 s segments (first 18 per track) → `data/segments.parquet` (46,185 segments) | 8 min |
 | 5 | `reencode.py [kbps]` | Re-encode every track identically (LAME CBR, 44.1 kHz stereo) | 6 min each |
 | 6 | `prep_hifi.py` | Spectral, MFCC and signature features | 5 min |
 | 7 | `evaluate_features.py` | In-domain evaluation, 5 splits by reference song | 8 min |
@@ -174,7 +174,7 @@ figures/, docs/                                         figures and the project 
 
 ## Data and credits
 
-- **Echoes:** Pascu, Oneata, Cucu, MÃ¼ller. *Echoes: A semantically-aligned music deepfake detection dataset.* arXiv:2603.23667 (2026). CC-BY-SA. [Hugging Face](https://huggingface.co/datasets/Octavian97/Echoes)
+- **Echoes:** Pascu, Oneata, Cucu, Müller. *Echoes: A semantically-aligned music deepfake detection dataset.* arXiv:2603.23667 (2026). CC-BY-SA. [Hugging Face](https://huggingface.co/datasets/Octavian97/Echoes)
 - **FMA:** Defferrard, Benzi, Vandergheynst, Bresson. *FMA: A Dataset for Music Analysis.* ISMIR 2017. [GitHub](https://github.com/mdeff/fma)
 
 No audio is redistributed in this repository. Audio remains under its original licenses.
