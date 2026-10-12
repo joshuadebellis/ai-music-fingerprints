@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -56,17 +56,17 @@
 <body>
 <main>
 
-<div class="eyebrow">AI music detection · Echoes benchmark</div>
+<div class="eyebrow">AI music detection Â· Echoes benchmark</div>
 <h1>Spectral Fingerprints of AI Music Generators</h1>
-<p class="lede">A 2.5&nbsp;MB detector that halves the published error on the Echoes benchmark, runs 115× faster than real time on one CPU thread, and shows exactly what gives each generator away.</p>
-<div class="byline sans">Joshua DeBellis · October 2026 · <a href="https://github.com/joshuadebellis/ai-music-fingerprints">Code on GitHub</a></div>
+<p class="lede">A 2.5&nbsp;MB detector that halves the published error on the Echoes benchmark, runs 115Ã— faster than real time on one CPU thread, and shows exactly what gives each generator away.</p>
+<div class="byline sans">Joshua DeBellis Â· October 2026 Â· <a href="https://github.com/joshuadebellis/ai-music-fingerprints">Code on GitHub</a></div>
 
 <div class="stats">
   <div class="stat"><div class="big">8.4%</div><div class="vs">vs 15.3% published</div><div class="label">Segment-level equal error rate, generators seen in training</div></div>
   <div class="stat"><div class="big">2.5&nbsp;MB</div><div class="vs">vs ~8&nbsp;GB (2B parameters)</div><div class="label">Model size: XGBoost on FFT features vs frozen Wav2Vec2 XLS-R 2B</div></div>
   <div class="stat"><div class="big">87&nbsp;ms</div><div class="vs">per 10&nbsp;s of audio, 1 CPU thread</div><div class="label">End to end: decode, features, prediction</div></div>
 </div>
-<p class="note">All headline numbers are after re-encoding every real and AI track identically (see “The encoding confound”).</p>
+<p class="note">All headline numbers are after re-encoding every real and AI track identically (see â€œThe encoding confoundâ€).</p>
 
 <h2>The question</h2>
 <p><a href="https://arxiv.org/abs/2603.23667">Echoes</a> (2026) is a deliberately hard benchmark for AI-generated music: 4,468 tracks from 12 generators (Suno v5, Udio, ElevenLabs, Stable Audio, MusicGen and others), each made to imitate one of 296 real songs from the Free Music Archive. Its baseline detector is a frozen 2-billion-parameter Wav2Vec2 XLS-R model with logistic regression on top, reaching 15.3% equal error rate (EER) in-domain and 22.3% on generators held out of training.</p>
@@ -74,14 +74,14 @@
 
 <h2>Method</h2>
 <div class="pipeline">
-  <span>MP3 → 32&nbsp;kHz mono</span><b>→</b>
-  <span>low-pass 15&nbsp;kHz</span><b>→</b>
-  <span>10&nbsp;s segments, loudness-normalized</span><b>→</b>
-  <span>features</span><b>→</b>
+  <span>MP3 â†’ 32&nbsp;kHz mono</span><b>â†’</b>
+  <span>low-pass 15&nbsp;kHz</span><b>â†’</b>
+  <span>10&nbsp;s segments, loudness-normalized</span><b>â†’</b>
+  <span>features</span><b>â†’</b>
   <span>XGBoost</span>
 </div>
 <ul>
-  <li><b>Fine spectrum:</b> long-term average log power per 7.8&nbsp;Hz bin, 0–15&nbsp;kHz (FFT size 4096).</li>
+  <li><b>Fine spectrum:</b> long-term average log power per 7.8&nbsp;Hz bin, 0â€“15&nbsp;kHz (FFT size 4096).</li>
   <li><b>Spectral residual:</b> that spectrum minus a smoothed copy, keeping only narrow peaks and dips. This is the strongest single feature set.</li>
   <li><b>MFCC statistics</b> (20 coefficients plus deltas) and a <b>path signature</b> of eight band energies over time, both secondary.</li>
 </ul>
@@ -92,12 +92,12 @@
 <div class="table-wrap"><table>
   <thead><tr><th>Features</th><th>Segment EER</th><th>Track EER</th></tr></thead>
   <tbody>
-    <tr class="hl"><td>All combined (9,142 features)</td><td>0.084 ± 0.006</td><td>0.031</td></tr>
+    <tr class="hl"><td>All combined (9,142 features)</td><td>0.084 Â± 0.006</td><td>0.031</td></tr>
     <tr><td>Spectral residual only (1,921)</td><td>0.099</td><td>0.043</td></tr>
     <tr><td>Fine spectrum only (1,921)</td><td>0.171</td><td>0.098</td></tr>
     <tr><td>MFCC 20 statistics (80)</td><td>0.276</td><td>0.177</td></tr>
     <tr><td>Band-energy path signature (5,220)</td><td>0.348</td><td>0.225</td></tr>
-    <tr><td><i>Echoes paper: Wav2Vec2 XLS-R 2B + LR</i></td><td><i>0.153</i></td><td>—</td></tr>
+    <tr><td><i>Echoes paper: Wav2Vec2 XLS-R 2B + LR</i></td><td><i>0.153</i></td><td>â€”</td></tr>
   </tbody>
 </table></div>
 <p>The spectral residual alone beats the published baseline. Averaging a track's segments brings EER to about 3%.</p>
@@ -121,7 +121,7 @@
     <tr class="hl"><td>Mean</td><td>15.1%</td><td>7.3%</td><td>22.3%</td><td>22.5%</td></tr>
   </tbody>
 </table></div>
-<p class="note">“Unseen” = leave one generator out of training, test on real music vs. that generator. Ours: all features, re-encoded at 128&nbsp;kbps; segment EER, mean of 5 splits.</p>
+<p class="note">â€œUnseenâ€ = leave one generator out of training, test on real music vs. that generator. Ours: all features, re-encoded at 128&nbsp;kbps; segment EER, mean of 5 splits.</p>
 <p><b>Seen generators: about half the error, 11 of 12 better.</b> <b>Unseen generators: parity on average,</b> with large wins on Suno, Brev, SongGen and AudioLDM and clear losses on DiffRhythm, MusicGen and AceStep. The features are sharp but generator-specific: they learn each architecture's fingerprint.</p>
 
 <h2>What gives them away</h2>
@@ -131,14 +131,14 @@
 </figure>
 <ul>
   <li><b>MusicGen</b> leaves a comb: tall, evenly spaced spikes across the spectrum (regular at about 398&nbsp;Hz), the classic trace of an upsampling or codec decoder.</li>
-  <li><b>AudioLDM and SongGen</b> go flat above about 7–9&nbsp;kHz with a sharp edge near 8.8&nbsp;kHz, consistent with generating at a low internal sample rate.</li>
+  <li><b>AudioLDM and SongGen</b> go flat above about 7â€“9&nbsp;kHz with a sharp edge near 8.8&nbsp;kHz, consistent with generating at a low internal sample rate.</li>
   <li><b>ElevenLabs</b> has a distinctive bump near 6&nbsp;kHz.</li>
   <li><b>Suno and Brev share the same ripple spacing (about 469&nbsp;Hz)</b> and cover for each other when either is held out, matching the Echoes paper's observation that the two are confused in attribution.</li>
   <li><b>Mubert</b> is closest to real music and hardest to catch, consistent with assembling tracks from human-made loops rather than synthesizing audio.</li>
 </ul>
 <figure>
   <img src="assets/residual_importance_reenc128.png" alt="Line chart of model importance by frequency from 0 to 15 kHz with sharp peaks between 5.5 and 13.5 kHz.">
-  <figcaption>Which frequency bins the residual-spectrum model relies on. Importance is spread across the spectrum, with the sharpest bins at 10–13&nbsp;kHz.</figcaption>
+  <figcaption>Which frequency bins the residual-spectrum model relies on. Importance is spread across the spectrum, with the sharpest bins at 10â€“13&nbsp;kHz.</figcaption>
 </figure>
 
 <h2>The encoding confound</h2>
@@ -146,13 +146,13 @@
 <div class="table-wrap"><table>
   <thead><tr><th>Source</th><th>Typical MP3 bitrate</th></tr></thead>
   <tbody>
-    <tr><td>Real (FMA)</td><td>256–320 kbps (median ~306)</td></tr>
+    <tr><td>Real (FMA)</td><td>256â€“320 kbps (median ~306)</td></tr>
     <tr><td>Most generators</td><td>128 kbps</td></tr>
     <tr><td>ElevenLabs</td><td>192 kbps</td></tr>
     <tr><td>MusicGen</td><td>~512 kbps (near-uncompressed)</td></tr>
   </tbody>
 </table></div>
-<p>File bitrate <i>alone</i> separates real from AI with AUC 0.84. Any detector that sees high frequencies can partly learn “high bitrate = real.” So every track, real and AI, was re-encoded through the same MP3 encoder at the same settings, and the whole pipeline rerun:</p>
+<p>File bitrate <i>alone</i> separates real from AI with AUC 0.84. Any detector that sees high frequencies can partly learn â€œhigh bitrate = real.â€ So every track, real and AI, was re-encoded through the same MP3 encoder at the same settings, and the whole pipeline rerun:</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Audio</th><th>Segment EER</th><th>Track EER</th></tr></thead>
   <tbody>
@@ -161,7 +161,7 @@
     <tr><td>All re-encoded, 96 kbps</td><td>0.093</td><td>0.041</td></tr>
   </tbody>
 </table></div>
-<div class="callout">Encoding accounted for 1–2 points. The rest is the generators. Anyone benchmarking on Echoes with real audio rebuilt from FMA should equalize encoding first.</div>
+<div class="callout">Encoding accounted for 1â€“2 points. The rest is the generators. Anyone benchmarking on Echoes with real audio rebuilt from FMA should equalize encoding first.</div>
 
 <h2>How simple is it?</h2>
 <div class="table-wrap"><table>
@@ -170,7 +170,7 @@
     <tr><td>Model</td><td>XGBoost, 600 trees, 61,760 nodes</td><td>Wav2Vec2 XLS-R, ~2B parameters</td></tr>
     <tr><td>Size</td><td>2.5 MB</td><td>~8 GB (float32)</td></tr>
     <tr><td>Hardware</td><td>one CPU thread</td><td>GPU for practical speed</td></tr>
-    <tr><td>Time per 10 s segment</td><td>87 ms end to end (115× real time)</td><td>—</td></tr>
+    <tr><td>Time per 10 s segment</td><td>87 ms end to end (115Ã— real time)</td><td>â€”</td></tr>
     <tr><td>Interpretable</td><td>yes: individual frequency bins</td><td>no</td></tr>
   </tbody>
 </table></div>
@@ -188,10 +188,12 @@
 <p>Everything runs on a single workstation with Python and <code>uv</code>. The Echoes AI tracks come from Hugging Face. The 296 real tracks are matched to FMA by title and artist (296/296 exact) and pulled out of the 879&nbsp;GB <code>fma_full.zip</code> with HTTP range requests, about 2.4&nbsp;GB in total. Full commands are in the <a href="https://github.com/joshuadebellis/ai-music-fingerprints#reproduce">repository README</a>.</p>
 
 <footer>
-  <p>Data: <a href="https://arxiv.org/abs/2603.23667">Echoes</a> (Pascu, Oneata, Cucu, Müller, 2026; CC-BY-SA) and the <a href="https://github.com/mdeff/fma">Free Music Archive dataset</a> (Defferrard et al., ISMIR 2017). Audio remains under its original licenses and is not redistributed here.</p>
-  <p>Joshua DeBellis ·  mathematical physicist and data scientist</p>
-</footer>
+  <p>Data: <a href="https://arxiv.org/abs/2603.23667">Echoes</a> (Pascu, Oneata, Cucu, MÃ¼ller, 2026; CC-BY-SA) and the <a href="https://github.com/mdeff/fma">Free Music Archive dataset</a> (Defferrard et al., ISMIR 2017). Audio remains under its original licenses and is not redistributed here.</p>
+  <p>Joshua DeBellis Â·  mathematical physicist and data scientist</p>
+  <p>Code: <a href="https://polyformproject.org/licenses/noncommercial/1.0.0">PolyForm Noncommercial 1.0.0</a>. Text and figures: <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. For commercial licensing, contact the author.</p></footer>
 
 </main>
 </body>
 </html>
+
+
