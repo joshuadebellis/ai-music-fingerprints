@@ -174,8 +174,7 @@ uv sync
 
 
 <!-- README.md, BLOCK D: add to the end of "Commands (PowerShell)". -->
-```powershell
-uv run python attribution.py cuda feat_reenc attr_reenc; if ($?) { uv run python reencode_shift.py }; if ($?) { $env:SEGMENTS_FILE="data/segments_reenc_shift.parquet"; $env:FEAT_PREFIX="feat_reenc_shift"; uv run python prep_hifi.py; $ok=$?; Remove-Item Env:SEGMENTS_FILE, Env:FEAT_PREFIX; if ($ok) { uv run python attribution.py cuda feat_reenc_shift attr_reenc_shift attr_reenc } }; if ($?) { uv run python fig_attribution.py }
+
 
 ### Commands (PowerShell)
 
@@ -187,6 +186,10 @@ Features on the original files (needed for the bitrate check) and on both re-enc
 
 ```powershell
 uv run python prep_hifi.py; $env:SEGMENTS_FILE="data/segments_reenc.parquet"; $env:FEAT_PREFIX="feat_reenc"; uv run python prep_hifi.py; $env:SEGMENTS_FILE="data/segments_reenc96.parquet"; $env:FEAT_PREFIX="feat_reenc96"; uv run python prep_hifi.py; Remove-Item Env:SEGMENTS_FILE; Remove-Item Env:FEAT_PREFIX
+```
+
+```powershell
+uv run python attribution.py cuda feat_reenc attr_reenc; if ($?) { uv run python reencode_shift.py }; if ($?) { $env:SEGMENTS_FILE="data/segments_reenc_shift.parquet"; $env:FEAT_PREFIX="feat_reenc_shift"; uv run python prep_hifi.py; $ok=$?; Remove-Item Env:SEGMENTS_FILE, Env:FEAT_PREFIX; if ($ok) { uv run python attribution.py cuda feat_reenc_shift attr_reenc_shift attr_reenc } }; if ($?) { uv run python fig_attribution.py }
 ```
 
 Evaluation, controls and figures:
