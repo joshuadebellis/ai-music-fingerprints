@@ -116,15 +116,6 @@ Accuracy dropped by 0.4 points, and no generator moved by more than 1.1. ElevenL
 
 **Caveats.** Attribution is closed-set: it assumes the clip comes from one of the 12. Echoes holds one version of each service (for example Suno v5, Brev v4.5 Pro), so a fingerprint identifies that version, and transfer to later releases is untested.
 
-
-| 10 | `attribution.py` | 12-generator attribution on the re-encoded features | ~30 min |
-| 11 | `reencode_shift.py`, then `prep_hifi.py`, then `attribution.py` | Encoding-history control: random sub-frame shift before re-encoding | ~1 h |
-| 12 | `fig_attribution.py` | Attribution figures | 10 s |
-
-
-<!-- README.md, BLOCK D: add to the end of "Commands (PowerShell)". -->
-```powershell
-uv run python attribution.py cuda feat_reenc attr_reenc; if ($?) { uv run python reencode_shift.py }; if ($?) { $env:SEGMENTS_FILE="data/segments_reenc_shift.parquet"; $env:FEAT_PREFIX="feat_reenc_shift"; uv run python prep_hifi.py; $ok=$?; Remove-Item Env:SEGMENTS_FILE, Env:FEAT_PREFIX; if ($ok) { uv run python attribution.py cuda feat_reenc_shift attr_reenc_shift attr_reenc } }; if ($?) { uv run python fig_attribution.py }
 ```
 ## The encoding confound
 
@@ -177,6 +168,14 @@ uv sync
 | 7 | `evaluate_features.py` | In-domain evaluation, 5 splits by reference song | 8 min |
 | 8 | `lopo.py` | Leave-one-generator-out | ~75 min |
 | 9 | `bitrate_check.py`, `importance.py`, `timing.py` | Encoding control, fingerprints, speed and size | 5 min |
+| 10 | `attribution.py` | 12-generator attribution on the re-encoded features | ~30 min |
+| 11 | `reencode_shift.py`, then `prep_hifi.py`, then `attribution.py` | Encoding-history control: random sub-frame shift before re-encoding | ~1 h |
+| 12 | `fig_attribution.py` | Attribution figures | 10 s |
+
+
+<!-- README.md, BLOCK D: add to the end of "Commands (PowerShell)". -->
+```powershell
+uv run python attribution.py cuda feat_reenc attr_reenc; if ($?) { uv run python reencode_shift.py }; if ($?) { $env:SEGMENTS_FILE="data/segments_reenc_shift.parquet"; $env:FEAT_PREFIX="feat_reenc_shift"; uv run python prep_hifi.py; $ok=$?; Remove-Item Env:SEGMENTS_FILE, Env:FEAT_PREFIX; if ($ok) { uv run python attribution.py cuda feat_reenc_shift attr_reenc_shift attr_reenc } }; if ($?) { uv run python fig_attribution.py }
 
 ### Commands (PowerShell)
 
