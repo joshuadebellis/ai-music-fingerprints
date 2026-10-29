@@ -188,14 +188,15 @@ Features on the original files (needed for the bitrate check) and on both re-enc
 uv run python prep_hifi.py; $env:SEGMENTS_FILE="data/segments_reenc.parquet"; $env:FEAT_PREFIX="feat_reenc"; uv run python prep_hifi.py; $env:SEGMENTS_FILE="data/segments_reenc96.parquet"; $env:FEAT_PREFIX="feat_reenc96"; uv run python prep_hifi.py; Remove-Item Env:SEGMENTS_FILE; Remove-Item Env:FEAT_PREFIX
 ```
 
-```powershell
-uv run python attribution.py cuda feat_reenc attr_reenc; if ($?) { uv run python reencode_shift.py }; if ($?) { $env:SEGMENTS_FILE="data/segments_reenc_shift.parquet"; $env:FEAT_PREFIX="feat_reenc_shift"; uv run python prep_hifi.py; $ok=$?; Remove-Item Env:SEGMENTS_FILE, Env:FEAT_PREFIX; if ($ok) { uv run python attribution.py cuda feat_reenc_shift attr_reenc_shift attr_reenc } }; if ($?) { uv run python fig_attribution.py }
-```
-
 Evaluation, controls and figures:
 
 ```powershell
 uv run python evaluate_features.py cuda reenc xgb ltas=data/feat_reenc_ltas.npy ltas_resid=data/feat_reenc_ltas_resid.npy mfcc20_stats=data/feat_reenc_mfcc20_stats.npy band_sig=data/feat_reenc_band_sig.npy all=data/feat_reenc_ltas.npy+data/feat_reenc_ltas_resid.npy+data/feat_reenc_mfcc20_stats.npy+data/feat_reenc_band_sig.npy; if ($?) { uv run python lopo.py }; if ($?) { uv run python bitrate_check.py }; if ($?) { uv run python importance.py data/feat_reenc_ltas_resid.npy reenc128 }; if ($?) { uv run python timing.py }
+```
+
+Attribution and its encoding-history control:
+```powershell
+uv run python attribution.py cuda feat_reenc attr_reenc; if ($?) { uv run python reencode_shift.py }; if ($?) { $env:SEGMENTS_FILE="data/segments_reenc_shift.parquet"; $env:FEAT_PREFIX="feat_reenc_shift"; uv run python prep_hifi.py; $ok=$?; Remove-Item Env:SEGMENTS_FILE, Env:FEAT_PREFIX; if ($ok) { uv run python attribution.py cuda feat_reenc_shift attr_reenc_shift attr_reenc } }; if ($?) { uv run python fig_attribution.py }
 ```
 
 On macOS or Linux, replace `$env:NAME="value"; ...` with `NAME=value uv run python ...`.
