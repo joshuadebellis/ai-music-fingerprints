@@ -10,6 +10,7 @@ AI music generators leave narrow, generator-specific artifacts in the fine struc
 |---|---|---|
 | Segment EER, generators seen in training | **8.4%** | 15.3% |
 | Segment EER, unseen generators (mean) | 22.5% | 22.3% |
+| Attribution accuracy, 12 generators | **91.0%** | 78.6% |
 | Model | XGBoost, 600 trees, 61,760 nodes | Wav2Vec2 XLS-R, ~2B parameters |
 | Size | **2.5 MB** | ~8 GB (float32) |
 | Time per 10 s segment, one CPU thread | **87 ms** end to end (115× real time) | GPU for practical speed |
@@ -80,6 +81,52 @@ Protocol follows the Echoes paper (10 s segments, segment-level EER), with one s
 
 ![Model importance by frequency](docs/assets/residual_importance_reenc128.png)
 
+### Which generator made it?
+
+Detection asks whether a clip is AI. Attribution asks *which* AI made it. The same features and XGBoost settings, switched to 12-class, name the generator of a 10 s segment with **91.0% accuracy**. The Echoes baseline (Wav2Vec2 XLS-R 2B + logistic regression) gets 78.6%.
+
+![Attribution accuracy and macro-F1, ours vs Echoes](docs/assets/attr_headline.png)
+
+| Features | Segment accuracy | Macro-F1 | Track accuracy |
+|---|---|---|---|
+| **All combined** | **0.910 ± 0.006** | **0.925** | **0.968** |
+| Spectral residual only | 0.885 ± 0.012 | 0.900 | 0.960 |
+| *Echoes paper: Wav2Vec2 XLS-R 2B + LR* | *0.786* | *0.82* | — |
+
+AI segments only, as in the paper. Same 5 splits by reference song as detection, which is stricter than the paper's track-level split. Majority-class rate 14.3% (paper: 15.1%).
+
+![Confusion matrix](docs/assets/attr_confusion.png)
+
+- **10 of 12 generators** are named correctly at least 94.5% of the time. MusicGen, AudioLDM and SongGen are above 99%.
+- **Suno and Brev** are mistaken for each other about 24% of the time each way, which is almost all of the remaining error. They share the ~469 Hz ripple above, and the Echoes paper reports the same pair at 26–27%.
+- **Mubert** is named correctly 75% of the time. Its misses spread across Stable Audio, Brev, Udio and ElevenLabs.
+
+![Per-generator recall](docs/assets/attr_recall.png)
+
+**Model or encoding?** Re-encoding equalizes the final bitrate but not each track's compression history, and repeated MP3 compression leaves fine-spectrum traces. As a control, every track was trimmed by a random 144–432 samples (mod the 576-sample MP3 granule) before re-encoding, so frame grids cannot line up. The pass rule was fixed in advance: beat the paper on both metrics, and drop by less than 2 points under the shift.
+
+| Audio | Segment accuracy | Macro-F1 |
+|---|---|---|
+| All re-encoded, 128 kbps | 0.910 | 0.925 |
+| Same, with a random time shift first | **0.906** | **0.922** |
+
+![Recall with and without the time shift](docs/assets/attr_shift.png)
+
+Accuracy dropped by 0.4 points, and no generator moved by more than 1.1. ElevenLabs and MusicGen, the two with the most unusual encoding histories, did not drop at all. The fingerprints belong to the generators. This fits [Afchar et al. (ISMIR 2025)](https://arxiv.org/abs/2506.19108), who show that upsampling layers leave spectral peaks set by the architecture rather than by training data.
+
+**Caveats.** Attribution is closed-set: it assumes the clip comes from one of the 12. Echoes holds one version of each service (for example Suno v5, Brev v4.5 Pro), so a fingerprint identifies that version, and transfer to later releases is untested.
+
+
+<!-- README.md, BLOCK C: add to the pipeline table under "Pipeline (run order)". -->
+| 10 | `attribution.py` | 12-generator attribution on the re-encoded features | ~30 min |
+| 11 | `reencode_shift.py`, then `prep_hifi.py`, then `attribution.py` | Encoding-history control: random sub-frame shift before re-encoding | ~1 h |
+| 12 | `fig_attribution.py` | Attribution figures | 10 s |
+
+
+<!-- README.md, BLOCK D: add to the end of "Commands (PowerShell)". -->
+```powershell
+uv run python attribution.py cuda feat_reenc attr_reenc; if ($?) { uv run python reencode_shift.py }; if ($?) { $env:SEGMENTS_FILE="data/segments_reenc_shift.parquet"; $env:FEAT_PREFIX="feat_reenc_shift"; uv run python prep_hifi.py; $ok=$?; Remove-Item Env:SEGMENTS_FILE, Env:FEAT_PREFIX; if ($ok) { uv run python attribution.py cuda feat_reenc_shift attr_reenc_shift attr_reenc } }; if ($?) { uv run python fig_attribution.py }
+```
 ## The encoding confound
 
 Echoes does not ship the real audio; it is rebuilt from the Free Music Archive. The two sides arrive encoded very differently:
