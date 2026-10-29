@@ -116,7 +116,7 @@ Accuracy dropped by 0.4 points, and no generator moved by more than 1.1. ElevenL
 
 **Caveats.** Attribution is closed-set: it assumes the clip comes from one of the 12. Echoes holds one version of each service (for example Suno v5, Brev v4.5 Pro), so a fingerprint identifies that version, and transfer to later releases is untested.
 
-```
+
 ## The encoding confound
 
 Echoes does not ship the real audio; it is rebuilt from the Free Music Archive. The two sides arrive encoded very differently:
