@@ -117,7 +117,6 @@ Accuracy dropped by 0.4 points, and no generator moved by more than 1.1. ElevenL
 **Caveats.** Attribution is closed-set: it assumes the clip comes from one of the 12. Echoes holds one version of each service (for example Suno v5, Brev v4.5 Pro), so a fingerprint identifies that version, and transfer to later releases is untested.
 
 
-<!-- README.md, BLOCK C: add to the pipeline table under "Pipeline (run order)". -->
 | 10 | `attribution.py` | 12-generator attribution on the re-encoded features | ~30 min |
 | 11 | `reencode_shift.py`, then `prep_hifi.py`, then `attribution.py` | Encoding-history control: random sub-frame shift before re-encoding | ~1 h |
 | 12 | `fig_attribution.py` | Attribution figures | 10 s |
