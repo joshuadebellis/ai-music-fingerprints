@@ -141,6 +141,65 @@
   <figcaption>Which frequency bins the residual-spectrum model relies on. Importance is spread across the spectrum, with the sharpest bins at 10–13&nbsp;kHz.</figcaption>
 </figure>
 
+  <h2 id="attribution">Which generator made it?</h2>
+<p>Detection asks whether a clip is AI. Attribution asks <i>which</i> AI made it. If the fingerprints above really belong to the generators, the same features should be able to tell the 12 generators apart, not just separate them from real music.</p>
+
+<figure>
+  <img src="assets/attr_headline.png" alt="Bar chart: attribution accuracy and macro-F1 for the Echoes baseline (0.786, 0.820) and for this method: residual only (0.884, 0.900), all features (0.910, 0.925), and all features with the time-shift control (0.906, 0.922).">
+  <figcaption>Attribution on the 12 Echoes generators. Grey: the paper's Wav2Vec2 XLS-R 2B baseline. Blue: this method. Orange: the encoding-history control described below.</figcaption>
+</figure>
+
+<h3>Setup</h3>
+<p>This mirrors the paper's attribution experiment: 12 classes, AI segments only, scored by segment accuracy and macro-F1. The paper fits logistic regression on frozen Wav2Vec2 XLS-R 2B embeddings. Here, the features, the 10&nbsp;s segments and the XGBoost settings are the same as for detection, switched to multiclass. The split is again by reference song, so all 12 imitations of a song are on the same side. That is stricter than the paper's track-level split. The majority-class rate is 14.3% (15.1% in the paper).</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Features</th><th>Segment accuracy</th><th>Macro-F1</th><th>Track accuracy</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td>All combined</td><td>0.910 ± 0.006</td><td>0.925</td><td>0.968</td></tr>
+    <tr><td>Spectral residual only</td><td>0.885 ± 0.012</td><td>0.900</td><td>0.960</td></tr>
+    <tr><td><i>Echoes paper: Wav2Vec2 XLS-R 2B + LR</i></td><td><i>0.786</i></td><td><i>0.82</i></td><td>—</td></tr>
+  </tbody>
+</table></div>
+<p class="note">Mean ± standard deviation over the same 5 splits by reference song used for detection. Track accuracy averages a track's segment probabilities.</p>
+<p>The spectral residual alone beats the 2B-parameter baseline. With all features, 10 of the 12 generators are named correctly at least 94.5% of the time, and MusicGen, AudioLDM and SongGen at over 99%.</p>
+
+<figure>
+  <img src="assets/attr_confusion.png" alt="12 by 12 confusion matrix. The diagonal is 94 to 100 percent for ten generators. Brev and Suno are confused with each other about 25 percent each way, and Mubert is spread across Stable Audio, Brev, Udio and ElevenLabs.">
+  <figcaption>Confusion matrix, all features, row-normalized, 5 splits pooled. Cells under 1% are left blank.</figcaption>
+</figure>
+
+<h3>Where it fails</h3>
+<ul>
+  <li><b>Suno and Brev</b> are mistaken for each other about 24% of the time in each direction. This is almost all of the remaining error. They share the same ~469&nbsp;Hz ripple in the residual spectrum (above), and the Echoes paper reports the same pair at 26–27% with its own model. Two independent methods hitting the same confusion suggests the two services share much of their generation pipeline.</li>
+  <li><b>Mubert</b> is named correctly 75% of the time. Its misses are spread across Stable Audio, Brev, Udio and ElevenLabs rather than concentrated on one rival. It is also the hardest generator to detect.</li>
+</ul>
+
+<figure>
+  <img src="assets/attr_recall.png" alt="Dot plot of per-generator recall for residual-only and all features. Most generators are above 94 percent with both. Mubert rises from 57 to 75 percent with all features, Brev from 68 to 74, Suno from 70 to 75.">
+  <figcaption>Per-generator recall. The residual does most of the work. The other feature blocks matter mainly for the three hard cases, and most of all for Mubert (57% to 75%).</figcaption>
+</figure>
+
+<h3>Is it the model, or the encoding?</h3>
+<p>Re-encoding every track at 128&nbsp;kbps equalizes the final bitrate but not the history. Real songs arrive at 256–320&nbsp;kbps, most generators at 128&nbsp;kbps, ElevenLabs at 192&nbsp;kbps and MusicGen near-uncompressed, and each is then re-encoded once more. Repeated MP3 compression leaves traces in exactly the fine spectral detail these features read. So a “which model” classifier could partly be learning “which encoding history”.</p>
+<p>The control: before re-encoding, each track is trimmed by a random 144–432 samples (modulo the 576-sample MP3 granule), so the new encoder's frame grid cannot line up with any earlier one. The pass rule was fixed before running: the result stands only if it beats the paper on both metrics and drops by less than 2 points under the shift.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Audio</th><th>Segment accuracy</th><th>Macro-F1</th></tr></thead>
+  <tbody>
+    <tr><td>All re-encoded, 128 kbps</td><td>0.910</td><td>0.925</td></tr>
+    <tr class="hl"><td>Same, with a random time shift first</td><td>0.906</td><td>0.922</td></tr>
+  </tbody>
+</table></div>
+
+<figure>
+  <img src="assets/attr_shift.png" alt="Dot plot of per-generator recall with and without the time shift. Every generator changes by 1.1 points or less.">
+  <figcaption>Per-generator recall with and without the time shift. No generator moves by more than 1.1 points.</figcaption>
+</figure>
+<div class="callout">Accuracy dropped by 0.4 points. ElevenLabs and MusicGen, the two with the most unusual encoding histories, did not drop at all (97.4% to 97.7%, and 99.8% unchanged). The fingerprints belong to the generators.</div>
+<p>This fits the explanation by <a href="https://arxiv.org/abs/2506.19108">Afchar et al. (ISMIR 2025)</a>: the upsampling layers in generative audio models leave small spectral peaks whose positions are set by the architecture, not by training data or learned weights. Different architectures give different peak patterns, which is what makes them separable here.</p>
+<p class="note"><b>Caveats.</b> Attribution is closed-set: it assumes the clip comes from one of the 12 generators. Echoes holds a single version of each service (for example Suno v5, Brev v4.5 Pro, ElevenLabs v2), so a fingerprint identifies that version, and whether it carries over to later releases is untested.</p>
+
+
 <h2>The encoding confound</h2>
 <p>Echoes does not ship the real audio; it is rebuilt from the Free Music Archive. The two sides arrive encoded very differently:</p>
 <div class="table-wrap"><table>
